@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: satworx
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: OPEN_BROWSER
+        value: 0
+      - key: PUBLIC_BASE_URL
+        value: https://satworx.com
+    disk:
+      name: satworx-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
