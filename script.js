@@ -163,7 +163,9 @@ contactForm?.addEventListener("submit", async (event) => {
             return;
         }
 
-        setStatus(result.message || "Thanks. Your Satworx inquiry has been received.", "success");
+        const statusMessage = result.message || "Thanks. Your Satworx inquiry has been received.";
+
+        setStatus(statusMessage, "success");
         contactForm.reset();
     } catch (error) {
         console.error("Satworx contact form request failed:", error);

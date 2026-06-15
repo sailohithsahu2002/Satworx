@@ -317,7 +317,7 @@ def save_assistant_message(question, answer):
 
 
 def email_notifications_enabled():
-    return bool(SMTP_HOST and SMTP_USERNAME and SMTP_PASSWORD and SMTP_FROM)
+    return all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM])
 
 
 def smtp_configuration_status():
@@ -333,44 +333,115 @@ def smtp_configuration_status():
     return missing
 
 
-def send_contact_email(lead):
-    if not email_notifications_enabled():
-        return False
+def gmail_password_is_valid():
+    host = SMTP_HOST.lower()
+    if "gmail.com" not in host and "googlemail.com" not in host:
+        return True
+    password = smtp_login_password()
+    return bool(re.fullmatch(r"[A-Za-z0-9]{16}", password))
 
-    message = EmailMessage()
-    message["Subject"] = f"New Satworx inquiry from {lead['name']}"
-    message["From"] = SMTP_FROM
-    message["To"] = ADMIN_EMAIL
-    message["Reply-To"] = lead["email"]
-    message.set_content(
-        "\n".join(
-            [
-                "New Satworx contact inquiry",
-                "",
-                f"Name: {lead['name']}",
-                f"Email: {lead['email']}",
-                f"Company: {lead.get('company', '') or '-'}",
-                f"Service: {lead.get('service', '') or '-'}",
-                f"Budget: {lead.get('budget', '') or '-'}",
-                "",
-                "Message:",
-                lead["message"],
-                "",
-                f"Lead ID: {lead['id']}",
-                f"Created at: {lead['created_at']}",
-            ]
+
+def smtp_login_password():
+    password = SMTP_PASSWORD.strip()
+    if "gmail.com" in SMTP_HOST.lower() or "googlemail.com" in SMTP_HOST.lower():
+        return re.sub(r"[\s-]+", "", password)
+    return password
+
+
+def gmail_password_guidance_message():
+    password = smtp_login_password()
+    if len(password) != 16 or not re.fullmatch(r"[A-Za-z0-9]{16}", password):
+        return (
+            "The current SMTP_PASSWORD in .env is not a valid 16-character Gmail App Password. "
+            "Generate a new App Password in Google Account > Security > App passwords, then paste that "
+            "16-character value here. Do not use your normal Google account password."
         )
+    return None
+
+
+def gmail_auth_error_message(exc):
+    detail = str(exc).lower()
+    is_gmail = "gmail.com" in SMTP_HOST.lower() or "googlemail.com" in SMTP_HOST.lower()
+    is_bad_credentials = any(
+        marker in detail
+        for marker in ("535", "badcredentials", "username and password not accepted", "authentication failed")
     )
 
-    use_ssl = not SMTP_USE_TLS or SMTP_PORT == 465
-    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) if use_ssl else smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        if SMTP_USE_TLS and not use_ssl:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-        server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        server.send_message(message)
-    return True
+    if is_gmail and is_bad_credentials:
+        return (
+            "Gmail SMTP authentication failed. Use a 16-character Gmail App Password in SMTP_PASSWORD "
+            "(not your normal Google account password). If needed, enable 2-Step Verification and "
+            "generate the App Password from Google Account > Security > App passwords."
+        )
+
+    if is_bad_credentials:
+        return "SMTP authentication failed. Check the SMTP username and password in the server settings."
+
+    return None
+
+
+def send_contact_email(lead):
+    if not email_notifications_enabled():
+        missing = smtp_configuration_status()
+        if missing:
+            return False, f"SMTP is not configured. Missing: {', '.join(missing)}."
+        return False, "SMTP email delivery is disabled."
+
+    if not gmail_password_is_valid():
+        guidance = gmail_password_guidance_message()
+        return False, guidance or (
+            "Gmail SMTP requires a 16-character Google App Password in SMTP_PASSWORD. "
+            "Use the App Password from Google Account > Security > App passwords, not your normal Gmail login password."
+        )
+
+    try:
+        message = EmailMessage()
+        message["Subject"] = f"New Satworx inquiry from {lead['name']}"
+        message["From"] = SMTP_FROM
+        message["To"] = ADMIN_EMAIL
+        message["Reply-To"] = lead["email"]
+        message.set_content(
+            "\n".join(
+                [
+                    "New Satworx contact inquiry",
+                    "",
+                    f"Name: {lead['name']}",
+                    f"Email: {lead['email']}",
+                    f"Company: {lead.get('company', '') or '-'}",
+                    f"Service: {lead.get('service', '') or '-'}",
+                    f"Budget: {lead.get('budget', '') or '-'}",
+                    "",
+                    "Message:",
+                    lead["message"],
+                    "",
+                    f"Lead ID: {lead['id']}",
+                    f"Created at: {lead['created_at']}",
+                ]
+            )
+        )
+
+        use_ssl = not SMTP_USE_TLS or SMTP_PORT == 465
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) if use_ssl else smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            if SMTP_USE_TLS and not use_ssl:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+            server.login(SMTP_USERNAME, smtp_login_password())
+            server.send_message(message)
+
+        return True, None
+    except Exception as exc:
+        friendly_error = gmail_auth_error_message(exc)
+        if friendly_error:
+            return False, friendly_error
+
+        error_detail = str(exc)
+        if "gmail.com" in SMTP_HOST.lower() or "googlemail.com" in SMTP_HOST.lower():
+            return False, (
+                "Gmail SMTP delivery failed. Check the Gmail App Password and SMTP settings in the server "
+                "configuration, then restart the app."
+            )
+        return False, error_detail
 
 
 class SatworxHandler(BaseHTTPRequestHandler):
@@ -477,24 +548,24 @@ class SatworxHandler(BaseHTTPRequestHandler):
             if error:
                 return json_response(self, 422, {"ok": False, "message": error})
             lead = save_lead(payload)
-            email_sent = False
-            email_error = None
-            try:
-                email_sent = send_contact_email(lead)
-                if not email_sent:
-                    missing = smtp_configuration_status()
-                    if missing:
-                        email_error = f"SMTP is not configured. Missing: {', '.join(missing)}."
-                    else:
-                        email_error = "SMTP email delivery is disabled."
-            except Exception as exc:
-                email_error = str(exc)
+            email_sent, email_error = send_contact_email(lead)
+            if not email_sent and not email_error:
+                missing = smtp_configuration_status()
+                if missing:
+                    email_error = f"SMTP is not configured. Missing: {', '.join(missing)}."
+                else:
+                    email_error = "SMTP email delivery is disabled."
+
+            status_message = "Thanks. Your Satworx inquiry has been received."
+            if not email_sent:
+                print(f"Contact email delivery failed for lead {lead['id']}: {email_error}")
+
             return json_response(
                 self,
                 201,
                 {
                     "ok": True,
-                    "message": "Thanks. Your Satworx inquiry has been received.",
+                    "message": status_message,
                     "lead_id": lead["id"],
                     "delivered_to": ADMIN_EMAIL,
                     "email_sent": email_sent,
