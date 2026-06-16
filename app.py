@@ -123,7 +123,7 @@ ADMIN_EMAIL = os.environ.get("TO_EMAIL", COMPANY["email"])
 SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USERNAME or ADMIN_EMAIL).strip()
 
 try:
-    import google.generativeai as genai
+    import google.git st as genai
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
