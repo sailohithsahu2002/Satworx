@@ -31,8 +31,16 @@ def load_local_env():
         key, value = line.split("=", 1)
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        if key and (key not in os.environ or not os.environ[key].strip()):
+        if key:
             os.environ[key] = value
+
+
+def debug_log(message):
+    try:
+        with open(ROOT / "smtp_debug.log", "a", encoding="utf-8") as fh:
+            fh.write(message + "\n")
+    except Exception:
+        pass
 
 
 load_local_env()
@@ -42,10 +50,13 @@ PORT = int(os.environ.get("PORT", "8000"))
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", f"http://127.0.0.1:{PORT}").rstrip("/")
 OPEN_BROWSER = os.environ.get("OPEN_BROWSER", "1") == "1"
 SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
+print(f"Loaded SMTP config: host={os.environ.get('SMTP_HOST')} user={os.environ.get('SMTP_USERNAME')} password_len={len(os.environ.get('SMTP_PASSWORD',''))}")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "").strip()
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "").strip()
 SMTP_USE_TLS = os.environ.get("SMTP_USE_TLS", "1") == "1"
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "").strip()
+GOOGLE_MODEL = os.environ.get("GOOGLE_MODEL", "text-bison-001").strip()
 LEADS_LOCK = threading.Lock()
 RATE_LOCK = threading.Lock()
 REQUEST_LOG = {}
@@ -110,6 +121,12 @@ COMPANY = {
 
 ADMIN_EMAIL = os.environ.get("TO_EMAIL", COMPANY["email"])
 SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USERNAME or ADMIN_EMAIL).strip()
+
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
 
 
 ASSISTANT_TOPICS = {
@@ -275,6 +292,10 @@ def validate_contact(payload):
 
 
 def assistant_reply(message):
+    ai_reply = google_assistant_reply(message)
+    if ai_reply:
+        return ai_reply
+
     text = message.lower()
     matched = []
 
@@ -348,6 +369,119 @@ def smtp_login_password():
     return password
 
 
+def smtp_test_login():
+    missing = smtp_configuration_status()
+    if missing:
+        return False, f"SMTP configuration incomplete. Missing: {', '.join(missing)}"
+
+    try:
+        use_ssl = not SMTP_USE_TLS or SMTP_PORT == 465
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) if use_ssl else smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            if SMTP_USE_TLS and not use_ssl:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+            server.login(SMTP_USERNAME, smtp_login_password())
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
+
+
+def smtp_health_status():
+    missing = smtp_configuration_status()
+    return {
+        "ready": not missing,
+        "missing": missing,
+        "host": SMTP_HOST,
+        "username": SMTP_USERNAME,
+        "from": SMTP_FROM,
+        "port": SMTP_PORT,
+        "use_tls": SMTP_USE_TLS,
+    }
+
+
+def tail_file(file_path, lines=50):
+    if not file_path.exists():
+        return []
+    try:
+        with file_path.open("rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            position = fh.tell()
+            buffer = b""
+            block_size = 1024
+            while position > 0 and buffer.count(b"\n") <= lines:
+                read_size = min(block_size, position)
+                position -= read_size
+                fh.seek(position)
+                buffer = fh.read(read_size) + buffer
+            return [line.decode("utf-8", errors="replace").rstrip("\r\n") for line in buffer.splitlines()[-lines:]]
+    except Exception:
+        return []
+
+
+def get_health_response():
+    return {
+        "ok": True,
+        "service": "Satworx API",
+        "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "smtp": smtp_health_status(),
+        "database": {
+            "path": str(DB_FILE),
+            "exists": DB_FILE.exists(),
+        },
+        "features": {
+            "ai_assistant": GENAI_AVAILABLE and bool(GOOGLE_API_KEY),
+        },
+    }
+
+
+def get_logs_response():
+    return {
+        "ok": True,
+        "smtp_debug": {
+            "path": str(ROOT / "smtp_debug.log"),
+            "exists": (ROOT / "smtp_debug.log").exists(),
+            "tail": tail_file(ROOT / "smtp_debug.log", lines=50),
+        },
+        "request_rate": {
+            "entries": {ip: len(entries) for ip, entries in REQUEST_LOG.items()},
+            "window_seconds": 300,
+        },
+    }
+
+
+def google_assistant_reply(message):
+    if not GENAI_AVAILABLE or not GOOGLE_API_KEY:
+        return None
+
+    try:
+        genai.configure(api_key=GOOGLE_API_KEY)
+        response = genai.responses.generate(
+            model=GOOGLE_MODEL,
+            input=f"Satworx assistant: answer the user's question clearly and concisely.\n\n{message}",
+            temperature=0.2,
+            max_output_tokens=256,
+        )
+
+        if getattr(response, "output_text", None):
+            return response.output_text.strip()
+        if getattr(response, "text", None):
+            return response.text.strip()
+        if hasattr(response, "output"):
+            outputs = []
+            for item in response.output:
+                if isinstance(item, str):
+                    outputs.append(item)
+                elif hasattr(item, "content"):
+                    outputs.append(str(item.content))
+            if outputs:
+                return "\n\n".join(outputs).strip()
+    except Exception as exc:
+        print(f"Google AI assistant failed: {exc}")
+
+    return None
+
+
 def gmail_password_guidance_message():
     password = smtp_login_password()
     if len(password) != 16 or not re.fullmatch(r"[A-Za-z0-9]{16}", password):
@@ -381,14 +515,18 @@ def gmail_auth_error_message(exc):
 
 
 def send_contact_email(lead):
+    debug_log(f"DEBUG send_contact_email: SMTP_HOST={SMTP_HOST!r}, SMTP_USERNAME={SMTP_USERNAME!r}, SMTP_PASSWORD_LEN={len(SMTP_PASSWORD)}, SMTP_PASSWORD_REPR={SMTP_PASSWORD!r}")
+    debug_log(f"DEBUG email_notifications_enabled={email_notifications_enabled()} gmail_password_is_valid={gmail_password_is_valid()}")
     if not email_notifications_enabled():
         missing = smtp_configuration_status()
         if missing:
+            debug_log(f"DEBUG missing smtp config: {missing}")
             return False, f"SMTP is not configured. Missing: {', '.join(missing)}."
         return False, "SMTP email delivery is disabled."
 
     if not gmail_password_is_valid():
         guidance = gmail_password_guidance_message()
+        debug_log(f"DEBUG invalid gmail password: {smtp_login_password()!r} length={len(smtp_login_password())}")
         return False, guidance or (
             "Gmail SMTP requires a 16-character Google App Password in SMTP_PASSWORD. "
             "Use the App Password from Google Account > Security > App passwords, not your normal Gmail login password."
@@ -472,7 +610,12 @@ class SatworxHandler(BaseHTTPRequestHandler):
         path = parsed.path.rstrip("/") or "/"
 
         if path == "/api/health":
-            return json_response(self, 200, {"ok": True, "service": "Satworx API"})
+            return json_response(self, 200, get_health_response())
+        if path == "/api/logs":
+            client_ip = self.client_address[0]
+            if client_ip not in ("127.0.0.1", "::1"):
+                return json_response(self, 403, {"ok": False, "message": "Log access is restricted to localhost."})
+            return json_response(self, 200, get_logs_response())
         if path == "/api/services":
             return json_response(self, 200, {"services": SERVICES})
         if path == "/api/company":
@@ -559,6 +702,18 @@ class SatworxHandler(BaseHTTPRequestHandler):
             status_message = "Thanks. Your Satworx inquiry has been received."
             if not email_sent:
                 print(f"Contact email delivery failed for lead {lead['id']}: {email_error}")
+                return json_response(
+                    self,
+                    502,
+                    {
+                        "ok": False,
+                        "message": email_error,
+                        "lead_id": lead["id"],
+                        "delivered_to": ADMIN_EMAIL,
+                        "email_sent": email_sent,
+                        "email_error": email_error,
+                    },
+                )
 
             return json_response(
                 self,
@@ -612,6 +767,11 @@ if __name__ == "__main__":
     missing_smtp = smtp_configuration_status()
     if missing_smtp:
         print(f"SMTP not ready. Missing: {', '.join(missing_smtp)}")
+    else:
+        ok, error = smtp_test_login()
+        if not ok:
+            print(f"SMTP auth test failed: {error}")
+            print("Please verify SMTP_PASSWORD and Gmail App Password settings in .env.")
     if OPEN_BROWSER and HOST in {"127.0.0.1", "localhost"}:
         threading.Timer(0.6, lambda: webbrowser.open(local_url)).start()
     try:

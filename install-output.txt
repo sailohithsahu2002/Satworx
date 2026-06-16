@@ -1,0 +1,130 @@
+Collecting google-generativeai
+  Downloading google_generativeai-0.8.6-py3-none-any.whl.metadata (3.9 kB)
+Collecting google-ai-generativelanguage==0.6.15 (from google-generativeai)
+  Downloading google_ai_generativelanguage-0.6.15-py3-none-any.whl.metadata (5.7 kB)
+Collecting google-api-core (from google-generativeai)
+  Downloading google_api_core-2.31.0-py3-none-any.whl.metadata (3.2 kB)
+Collecting google-api-python-client (from google-generativeai)
+  Downloading google_api_python_client-2.197.0-py3-none-any.whl.metadata (7.0 kB)
+Collecting google-auth>=2.15.0 (from google-generativeai)
+  Downloading google_auth-2.55.0-py3-none-any.whl.metadata (5.1 kB)
+Collecting protobuf (from google-generativeai)
+  Downloading protobuf-7.35.1-cp310-abi3-win_amd64.whl.metadata (595 bytes)
+Collecting pydantic (from google-generativeai)
+  Downloading pydantic-2.13.4-py3-none-any.whl.metadata (109 kB)
+Collecting tqdm (from google-generativeai)
+  Downloading tqdm-4.68.2-py3-none-any.whl.metadata (58 kB)
+Collecting typing-extensions (from google-generativeai)
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting proto-plus<2.0.0dev,>=1.22.3 (from google-ai-generativelanguage==0.6.15->google-generativeai)
+  Downloading proto_plus-1.28.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting protobuf (from google-generativeai)
+  Downloading protobuf-5.29.6-cp310-abi3-win_amd64.whl.metadata (592 bytes)
+Collecting googleapis-common-protos<2.0.0,>=1.63.2 (from google-api-core->google-generativeai)
+  Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting requests<3.0.0,>=2.33.0 (from google-api-core->google-generativeai)
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting grpcio<2.0.0,>=1.41.0 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1->google-ai-generativelanguage==0.6.15->google-generativeai)
+  Downloading grpcio-1.81.1.tar.gz (13.0 MB)
+     ---------------------------------------- 13.0/13.0 MB 7.3 MB/s  0:00:01
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting grpcio-status<2.0.0,>=1.41.0 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1->google-ai-generativelanguage==0.6.15->google-generativeai)
+  Downloading grpcio_status-1.81.1-py3-none-any.whl.metadata (1.2 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth>=2.15.0->google-generativeai)
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting cryptography>=38.0.3 (from google-auth>=2.15.0->google-generativeai)
+  Downloading cryptography-49.0.0-cp311-abi3-win_amd64.whl.metadata (4.3 kB)
+INFO: pip is looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.
+Collecting grpcio-status<2.0.0,>=1.41.0 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1->google-ai-generativelanguage==0.6.15->google-generativeai)
+  Downloading grpcio_status-1.81.0-py3-none-any.whl.metadata (1.2 kB)
+  Downloading grpcio_status-1.80.0-py3-none-any.whl.metadata (1.3 kB)
+  Downloading grpcio_status-1.78.0-py3-none-any.whl.metadata (1.3 kB)
+  Downloading grpcio_status-1.76.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.75.1-py3-none-any.whl.metadata (1.1 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.63.2 (from google-api-core->google-generativeai)
+  Downloading googleapis_common_protos-1.74.0-py3-none-any.whl.metadata (9.2 kB)
+INFO: pip is still looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.
+Collecting google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1 (from google-ai-generativelanguage==0.6.15->google-generativeai)
+  Downloading google_api_core-2.30.3-py3-none-any.whl.metadata (3.1 kB)
+INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+  Downloading google_api_core-2.30.2-py3-none-any.whl.metadata (3.1 kB)
+  Downloading google_api_core-2.30.1-py3-none-any.whl.metadata (3.1 kB)
+  Downloading google_api_core-2.30.0-py3-none-any.whl.metadata (3.1 kB)
+  Downloading google_api_core-2.29.0-py3-none-any.whl.metadata (3.3 kB)
+  Downloading google_api_core-2.28.1-py3-none-any.whl.metadata (3.3 kB)
+  Downloading google_api_core-2.28.0-py3-none-any.whl.metadata (3.2 kB)
+  Downloading google_api_core-2.27.0-py3-none-any.whl.metadata (3.2 kB)
+  Downloading google_api_core-2.26.0-py3-none-any.whl.metadata (3.2 kB)
+  Downloading google_api_core-2.25.2-py3-none-any.whl.metadata (3.0 kB)
+Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1->google-ai-generativelanguage==0.6.15->google-generativeai)
+  Downloading grpcio_status-1.75.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.74.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.73.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.73.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.72.2-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.72.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.71.2-py3-none-any.whl.metadata (1.1 kB)
+Collecting charset_normalizer<4,>=2 (from requests<3.0.0,>=2.33.0->google-api-core->google-generativeai)
+  Downloading charset_normalizer-3.4.7-py3-none-any.whl.metadata (40 kB)
+Collecting idna<4,>=2.5 (from requests<3.0.0,>=2.33.0->google-api-core->google-generativeai)
+  Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+Collecting urllib3<3,>=1.26 (from requests<3.0.0,>=2.33.0->google-api-core->google-generativeai)
+  Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2023.5.7 (from requests<3.0.0,>=2.33.0->google-api-core->google-generativeai)
+  Downloading certifi-2026.5.20-py3-none-any.whl.metadata (2.5 kB)
+Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth>=2.15.0->google-generativeai)
+  Downloading cffi-2.0.0.tar.gz (523 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  +ù Getting requirements to build wheel did not run successfully.
+  Göé exit code: 1
+  Gò¦GöÇ> [36 lines of output]
+      Traceback (most recent call last):
+        File "C:\Users\sailo\OneDrive\Desktop\Satworx\.venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py", line 389, in <module>
+          main()
+          ~~~~^^
+        File "C:\Users\sailo\OneDrive\Desktop\Satworx\.venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\sailo\OneDrive\Desktop\Satworx\.venv\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\build_meta.py", line 333, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+          ~~~~~~~~~~~~~~^^
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\build_meta.py", line 317, in run_setup
+          exec(code, locals())
+          ~~~~^^^^^^^^^^^^^^^^
+        File "<string>", line 132, in <module>
+        File "<string>", line 111, in uses_msvc
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\_distutils\command\config.py", line 203, in try_compile
+          self._compile(body, headers, include_dirs, lang)
+          ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\_distutils\command\config.py", line 127, in _compile
+          self.compiler.compile([src], include_dirs=include_dirs)
+          ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\_distutils\compilers\C\msvc.py", line 384, in compile
+          self.initialize()
+          ~~~~~~~~~~~~~~~^^
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\_distutils\compilers\C\msvc.py", line 294, in initialize
+          vc_env = _get_vc_env(plat_spec)
+        File "C:\Users\sailo\AppData\Local\Temp\pip-build-env-h4p_d3cw\overlay\Lib\site-packages\setuptools\_distutils\compilers\C\msvc.py", line 155, in _get_vc_env
+          raise DistutilsPlatformError(
+          ...<3 lines>...
+          )
+      distutils.errors.DistutilsPlatformError: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+ERROR: Failed to build 'cffi' when getting requirements to build wheel

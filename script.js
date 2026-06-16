@@ -157,6 +157,12 @@ contactForm?.addEventListener("submit", async (event) => {
             result = {};
         }
 
+        if (result.email_sent === false || (result.email_error && result.email_error.toString().trim())) {
+            const emailError = result.email_error || result.message || "Your inquiry was received, but email delivery failed.";
+            setStatus(`Your inquiry was saved, but email delivery failed: ${emailError}`, "error");
+            return;
+        }
+
         if (!response.ok) {
             const message = result.message || `The Satworx backend returned ${response.status}.`;
             setStatus(message, "error");
@@ -164,7 +170,6 @@ contactForm?.addEventListener("submit", async (event) => {
         }
 
         const statusMessage = result.message || "Thanks. Your Satworx inquiry has been received.";
-
         setStatus(statusMessage, "success");
         contactForm.reset();
     } catch (error) {
