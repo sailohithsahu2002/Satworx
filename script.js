@@ -182,7 +182,7 @@ contactForm?.addEventListener("submit", async (event) => {
         } catch (fallbackError) {
             console.error("Satworx contact form fallback failed:", fallbackError);
         }
-        setStatus("Could not send the inquiry to the Satworx backend. Make sure app.py is running at http://127.0.0.1:8000 and reload the page.", "error");
+        setStatus("Could not send the inquiry to the Satworx backend. Make sure app.py is running and reload the page.", "error");
     } finally {
         button.disabled = false;
     }
@@ -205,9 +205,10 @@ function submitContactViaHiddenForm(data) {
             document.body.appendChild(iframe);
         }
 
+        const origin = location.protocol === "file:" ? "http://127.0.0.1:8000" : `${location.protocol}//${location.host}`;
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = "http://127.0.0.1:8000/api/contact";
+        form.action = `${origin}/api/contact`;
         form.target = frameName;
         form.style.display = "none";
 

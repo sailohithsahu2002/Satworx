@@ -2,6 +2,7 @@
 setlocal
 cd /d "%~dp0"
 
+if not defined HOST set "HOST=0.0.0.0"
 set "BUNDLED_PYTHON=%USERPROFILE%\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
 
 if exist "%BUNDLED_PYTHON%" (

@@ -7,6 +7,7 @@ import json
 import mimetypes
 import os
 import re
+import socket
 import sqlite3
 import threading
 import uuid
@@ -35,6 +36,24 @@ def load_local_env():
             os.environ[key] = value
 
 
+def get_local_ip():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            return sock.getsockname()[0]
+    except Exception:
+        return None
+
+
+def get_default_public_base_url(host, port):
+    if host in {"0.0.0.0", "::"}:
+        ip = get_local_ip() or "127.0.0.1"
+        return f"http://{ip}:{port}"
+    if host in {"127.0.0.1", "localhost"}:
+        return f"http://127.0.0.1:{port}"
+    return f"http://{host}:{port}"
+
+
 def debug_log(message):
     try:
         with open(ROOT / "smtp_debug.log", "a", encoding="utf-8") as fh:
@@ -45,9 +64,10 @@ def debug_log(message):
 
 load_local_env()
 
-HOST = os.environ.get("HOST", "127.0.0.1")
+HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = int(os.environ.get("PORT", "8000"))
-PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", f"http://127.0.0.1:{PORT}").rstrip("/")
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL") or get_default_public_base_url(HOST, PORT)
+PUBLIC_BASE_URL = PUBLIC_BASE_URL.rstrip("/")
 OPEN_BROWSER = os.environ.get("OPEN_BROWSER", "1") == "1"
 SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
 print(f"Loaded SMTP config: host={os.environ.get('SMTP_HOST')} user={os.environ.get('SMTP_USERNAME')} password_len={len(os.environ.get('SMTP_PASSWORD',''))}")
@@ -762,7 +782,11 @@ if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), SatworxHandler)
     local_url = f"http://127.0.0.1:{PORT}/home"
     public_url = f"{PUBLIC_BASE_URL}/home"
+    print(f"Satworx listening on {HOST}:{PORT}")
     print(f"Satworx local URL: {local_url}")
+    if HOST in {"0.0.0.0", "::"}:
+        network_url = f"http://{get_local_ip() or '127.0.0.1'}:{PORT}/home"
+        print(f"Satworx network URL: {network_url}")
     print(f"Satworx public URL after domain setup: {public_url}")
     missing_smtp = smtp_configuration_status()
     if missing_smtp:
